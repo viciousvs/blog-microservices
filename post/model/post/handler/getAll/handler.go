@@ -1,4 +1,4 @@
-package add
+package getAll
 
 import (
 	"context"
@@ -13,6 +13,6 @@ func NewHandler(repo post.Repository) *handler {
 	return &handler{repo: repo}
 }
 
-func (h handler) Handle(ctx context.Context, post post.Post) (string, error) {
-	return h.repo.Create(ctx, post)
+func (h handler) Handle(ctx context.Context) ([]*post.Post, error) {
+	return h.repo.GetAll(ctx)
 }

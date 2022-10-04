@@ -7,7 +7,7 @@ service PostService{
   rpc GetAll(GetAllRequest) returns (Posts){}
   rpc GetByID(GetByIdRequest) returns (Post){}
   rpc Update(UpdateRequest) returns (UpdateResponse){}
-  rpc DeletByID(DeleteByIdRequest) returns (DeleteByIDResponse){}
+  rpc DeleteByID(DeleteByIdRequest) returns (DeleteByIDResponse){}
   rpc Create(CreateRequest) returns (CreateResponse){}
 }
 

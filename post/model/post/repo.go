@@ -1,9 +1,11 @@
 package post
 
+import "context"
+
 type Repository interface {
-	Create(post Post) (string, error)
-	GetAll() ([]*Post, error)
-	GetById(uuid string) (Post, error)
-	Update(post Post) (string, error)
-	Delete(uuid string) (string, error)
+	Create(ctx context.Context, post Post) (string, error)
+	GetAll(ctx context.Context) ([]*Post, error)
+	GetById(ctx context.Context, uuid string) (Post, error)
+	Update(ctx context.Context, post Post) (string, error)
+	Delete(ctx context.Context, uuid string) (string, error)
 }

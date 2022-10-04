@@ -1,4 +1,4 @@
-package add
+package update
 
 import (
 	"context"
@@ -14,5 +14,5 @@ func NewHandler(repo post.Repository) *handler {
 }
 
 func (h handler) Handle(ctx context.Context, post post.Post) (string, error) {
-	return h.repo.Create(ctx, post)
+	return h.repo.Update(ctx, post)
 }
