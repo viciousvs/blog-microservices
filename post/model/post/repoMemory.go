@@ -28,12 +28,13 @@ func (m *MemDB) Create(ctx context.Context, post Post) (string, error) {
 	m.Mu.Lock()
 	defer m.Mu.Unlock()
 
+	now := time.Now().Unix()
 	post = Post{
 		UUID:      m.GetNewUUID(),
 		Title:     post.Title,
 		Content:   post.Content,
-		CreatedAt: time.Now(),
-		UpdateAt:  time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
 	m.DB = append(m.DB, &post)
@@ -83,10 +84,10 @@ func (m *MemDB) Update(ctx context.Context, post Post) (string, error) {
 	for k, p := range m.DB {
 		if p.UUID == post.UUID {
 			m.DB[k] = &Post{
-				UUID:     post.UUID,
-				Title:    post.Title,
-				Content:  post.Content,
-				UpdateAt: time.Now(),
+				UUID:      post.UUID,
+				Title:     post.Title,
+				Content:   post.Content,
+				UpdatedAt: time.Now().Unix(),
 			}
 			uuid = p.UUID
 			isExist = true

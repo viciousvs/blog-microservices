@@ -2,57 +2,44 @@ package redisRepo
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/viciousvs/blog-microservices/post/model/post"
+	"github.com/viciousvs/blog-microservices/post/config"
+	"log"
 	"sync"
+	"time"
 )
 
 var singleRedisDB *RedisDB
 var initOnce sync.Once
 
-func NewRedisDB(addr, password string, db int) *RedisDB {
+type RedisDB struct {
+	*redis.Conn
+}
+
+func NewRedisDB(config config.RedisConfig) *RedisDB {
 	initOnce.Do(func() {
-		ctx := context.Background()
-		singleRedisDB = &RedisDB{}
-		singleRedisDB.Conn = redis.NewClient(
-			&redis.Options{
-				Addr:     addr,
-				Password: password,
-				DB:       db,
-			}).Conn(ctx)
+		var err error
+		singleRedisDB, err = newRedisRepository(config)
+		if err != nil {
+			log.Fatalf("cannot connect to Redis: %v", err)
+		}
 	})
 	return singleRedisDB
 }
 
-type RedisDB struct {
-	Mu   sync.Mutex
-	Conn *redis.Conn
-}
+func newRedisRepository(config config.RedisConfig) (*RedisDB, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func (r *RedisDB) Create(ctx context.Context, post post.Post) (string, error) {
-	r.Mu.Lock()
-	defer r.Mu.Unlock()
-	err := r.Conn.HMSet(ctx, post.UUID, map[string]interface{
-		post.
-	}).Err()
-}
-
-func (r *RedisDB) GetAll(ctx context.Context) ([]*post.Post, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *RedisDB) GetById(ctx context.Context, uuid string) (post.Post, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *RedisDB) Update(ctx context.Context, post post.Post) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *RedisDB) Delete(ctx context.Context, uuid string) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	conn := redis.NewClient(
+		&redis.Options{
+			Addr:     config.Addr,
+			Password: config.Password,
+			DB:       config.DB,
+		}).Conn(ctx)
+	if err := conn.Ping(ctx).Err(); err != nil {
+		return nil, fmt.Errorf("cannot ping redis: %v", err)
+	}
+	return &RedisDB{conn}, nil
 }
