@@ -1,9 +1,14 @@
 package utils
 
-import "errors"
+import (
+	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
 
 var (
-	ErrNilDB     = errors.New("Nil DB error")
-	ErrEmptyUUID = errors.New("Empty uuid")
-	ErrNotExist  = errors.New("Element not exist")
+	ErrNilDB     = errors.New("nil DB error")
+	ErrEmptyUUID = errors.New("empty uuid")
+	ErrNotExist  = errors.New("element not exist")
+	ErrNotFound  = status.Error(codes.Code(409), "not found")
 )

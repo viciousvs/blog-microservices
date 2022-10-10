@@ -5,6 +5,9 @@ import (
 	"strconv"
 )
 
+type ServerConfig struct {
+	Addres string
+}
 type RedisConfig struct {
 	Addr     string
 	Password string
@@ -20,6 +23,7 @@ type PostgresConfig struct {
 }
 
 type Config struct {
+	Server   ServerConfig
 	Redis    RedisConfig
 	Postgres PostgresConfig
 }
@@ -41,6 +45,9 @@ func getEnvAsInt(name string, defaultValue int) int {
 
 func NewConfig() *Config {
 	return &Config{
+		Server: ServerConfig{
+			Addres: getEnv("SERVER_ADDR", "localhost:50051"),
+		},
 		Redis: RedisConfig{
 			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),

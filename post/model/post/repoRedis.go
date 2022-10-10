@@ -29,7 +29,7 @@ func NewRepoRedis(config config.RedisConfig) Repository {
 	return &repoRedis{redisSource: redisRepo.NewRedisDB(config)}
 }
 
-func (r repoRedis) Create(ctx context.Context, post Post) (string, error) {
+func (r *repoRedis) Create(ctx context.Context, post Post) (string, error) {
 	now := time.Now().Unix()
 	uuid := r.getNewUUID()
 	err := r.redisSource.HMSet(ctx, post.UUID, map[string]interface{}{
@@ -45,7 +45,7 @@ func (r repoRedis) Create(ctx context.Context, post Post) (string, error) {
 	return uuid, nil
 }
 
-func (r repoRedis) GetAll(ctx context.Context) ([]*Post, error) {
+func (r *repoRedis) GetAll(ctx context.Context) ([]*Post, error) {
 	posts := make([]*Post, 0)
 
 	postKeys, err := r.redisSource.Keys(ctx, postPrefix).Result()
@@ -65,7 +65,7 @@ func (r repoRedis) GetAll(ctx context.Context) ([]*Post, error) {
 	return posts, nil
 }
 
-func (r repoRedis) GetById(ctx context.Context, uuid string) (Post, error) {
+func (r *repoRedis) GetById(ctx context.Context, uuid string) (Post, error) {
 	var p Post
 	key := postPrefix + uuid
 	m, err := r.redisSource.HGetAll(ctx, key).Result()
@@ -79,7 +79,7 @@ func (r repoRedis) GetById(ctx context.Context, uuid string) (Post, error) {
 	return p, nil
 }
 
-func (r repoRedis) Update(ctx context.Context, inputPost Post) (string, error) {
+func (r *repoRedis) Update(ctx context.Context, inputPost Post) (string, error) {
 	//TODO fix Update Method
 	var p Post
 	//tmpCreatedAt := inputPost.CreatedAt
@@ -116,7 +116,7 @@ func (r repoRedis) Update(ctx context.Context, inputPost Post) (string, error) {
 	return p.UUID, nil
 }
 
-func (r repoRedis) Delete(ctx context.Context, uuid string) (string, error) {
+func (r *repoRedis) Delete(ctx context.Context, uuid string) (string, error) {
 	key := postPrefix + uuid
 	n, err := r.redisSource.Del(ctx, key).Result()
 	if n != 1 {

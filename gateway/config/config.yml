@@ -1,9 +1,0 @@
-grpc:
-  client:
-    post:
-      domain: "localhost"
-      port: "50051"
-
-http:
-  domain: "localhost"
-  port: "8081"

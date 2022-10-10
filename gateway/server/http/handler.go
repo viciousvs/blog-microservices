@@ -45,7 +45,7 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	uuid := r.URL.Query().Get("id")
 	if uuid == "" {
-		errorHandler(w, "emty uuid", http.StatusBadRequest)
+		errorHandler(w, "empty uuid", http.StatusBadRequest)
 		return
 	}
 	p, err := h.PostService.GetByID(r.Context(), &pbPost.GetByIdRequest{UUID: uuid})

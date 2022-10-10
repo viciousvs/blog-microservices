@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"github.com/viciousvs/blog-microservices/post/model/post"
 	"github.com/viciousvs/blog-microservices/post/model/post/handler/add"
 	"github.com/viciousvs/blog-microservices/post/model/post/handler/deleteById"
 	"github.com/viciousvs/blog-microservices/post/model/post/handler/getAll"
@@ -12,7 +11,6 @@ import (
 	pbPost "github.com/viciousvs/blog-microservices/proto/post"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *Server) GetAll(ctx context.Context, req *pbPost.GetAllRequest) (*pbPost.Posts, error) {
@@ -28,8 +26,8 @@ func (s *Server) GetAll(ctx context.Context, req *pbPost.GetAllRequest) (*pbPost
 			UUID:      p.UUID,
 			Title:     p.Title,
 			Content:   p.Content,
-			CreatedAt: timestamppb.New(p.CreatedAt),
-			UpdatedAt: timestamppb.New(p.UpdateAt),
+			CreatedAt: p.CreatedAt,
+			UpdatedAt: p.UpdatedAt,
 		}
 		resultPosts = append(resultPosts, newPost)
 	}
@@ -38,7 +36,7 @@ func (s *Server) GetAll(ctx context.Context, req *pbPost.GetAllRequest) (*pbPost
 }
 func (s *Server) GetByID(ctx context.Context, req *pbPost.GetByIdRequest) (*pbPost.Post, error) {
 	h := getById.NewHandler(s.repo)
-	p, err := h.Handle(ctx, req.GetUUID())
+	p, err := h.Handle(ctx, req)
 	if err != nil {
 		if err == utils.ErrNotExist {
 			return nil, status.Errorf(codes.NotFound, "data with uuid:%s not found:%v", req.GetUUID(), err)
@@ -50,19 +48,14 @@ func (s *Server) GetByID(ctx context.Context, req *pbPost.GetByIdRequest) (*pbPo
 		UUID:      p.UUID,
 		Title:     p.Title,
 		Content:   p.Content,
-		CreatedAt: timestamppb.New(p.CreatedAt),
-		UpdatedAt: timestamppb.New(p.UpdateAt),
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
 	}
 	return res, nil
 }
 func (s *Server) Update(ctx context.Context, req *pbPost.UpdateRequest) (*pbPost.UpdateResponse, error) {
-	p := post.Post{
-		UUID:    req.GetUUID(),
-		Title:   req.GetTitle(),
-		Content: req.GetContent(),
-	}
 	h := update.NewHandler(s.repo)
-	uuid, err := h.Handle(ctx, p)
+	uuid, err := h.Handle(ctx, req)
 	if err != nil {
 		if err == utils.ErrNotExist {
 			return nil, status.Errorf(codes.NotFound, "data with uuid:%s not found:%v", req.GetUUID(), err)
@@ -74,7 +67,7 @@ func (s *Server) Update(ctx context.Context, req *pbPost.UpdateRequest) (*pbPost
 }
 func (s *Server) DeleteByID(ctx context.Context, req *pbPost.DeleteByIdRequest) (*pbPost.DeleteByIDResponse, error) {
 	h := deleteById.NewHandler(s.repo)
-	uuid, err := h.Handle(ctx, req.GetUUID())
+	uuid, err := h.Handle(ctx, req)
 	if err != nil {
 		if err == utils.ErrNotExist {
 			return nil, status.Errorf(codes.NotFound, "data with uuid:%s not found:%v", req.GetUUID(), err)
@@ -85,15 +78,10 @@ func (s *Server) DeleteByID(ctx context.Context, req *pbPost.DeleteByIdRequest) 
 	return &pbPost.DeleteByIDResponse{UUID: uuid}, nil
 }
 func (s *Server) Create(ctx context.Context, req *pbPost.CreateRequest) (*pbPost.CreateResponse, error) {
-	p := post.Post{
-		UUID:    req.GetUUID(),
-		Title:   req.GetTitle(),
-		Content: req.GetContent(),
-	}
 	h := add.NewHandler(s.repo)
-	uuid, err := h.Handle(ctx, p)
+	uuid, err := h.Handle(ctx, req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot create Post DB: %v", err)
+		return nil, err
 	}
 
 	return &pbPost.CreateResponse{UUID: uuid}, nil

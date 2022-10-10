@@ -1,14 +1,27 @@
 package post
 
 import (
+	"fmt"
+	"github.com/viciousvs/blog-microservices/gateway/config"
 	pbPost "github.com/viciousvs/blog-microservices/proto/post"
 	"google.golang.org/grpc"
+	"log"
 )
 
-func Connect(address string) (*grpc.ClientConn, error) {
-	return grpc.Dial(address, grpc.WithInsecure())
+type client struct {
 }
 
-func GetClient(conn *grpc.ClientConn) pbPost.PostServiceClient {
-	return pbPost.NewPostServiceClient(conn)
+func NewPostClientGRPC(cfg config.PostClientConfig) (pbPost.PostServiceClient, error) {
+	conn, err := grpc.Dial(cfg.Addr, grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("Cannot connect to grpc Server, err:%v", err)
+	}
+	defer func() {
+		err := conn.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
+	return pbPost.NewPostServiceClient(conn), nil
 }
