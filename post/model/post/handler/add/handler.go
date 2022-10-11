@@ -6,20 +6,18 @@ import (
 	pbPost "github.com/viciousvs/blog-microservices/proto/post"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 )
 
-type handler struct {
+type Handler struct {
 	repo post.Repository
 }
 
-func NewHandler(repo post.Repository) *handler {
-	return &handler{repo: repo}
+func NewHandler(repo post.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
-func (h handler) Handle(ctx context.Context, req *pbPost.CreateRequest) (string, error) {
+func (h Handler) Handle(ctx context.Context, req *pbPost.CreateRequest) (string, error) {
 	// validation 400
-	log.Println()
 	if req.Title == "" {
 		return "", status.Errorf(codes.InvalidArgument, "Empty Title")
 	}

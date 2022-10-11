@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"github.com/viciousvs/blog-microservices/post/model/post/handler/add"
 	"github.com/viciousvs/blog-microservices/post/model/post/handler/deleteById"
 	"github.com/viciousvs/blog-microservices/post/model/post/handler/getAll"
@@ -57,6 +58,9 @@ func (s *Server) Update(ctx context.Context, req *pbPost.UpdateRequest) (*pbPost
 	h := update.NewHandler(s.repo)
 	uuid, err := h.Handle(ctx, req)
 	if err != nil {
+		if errors.Is(err, utils.ErrNotFound) {
+			return nil, err
+		}
 		if err == utils.ErrNotExist {
 			return nil, status.Errorf(codes.NotFound, "data with uuid:%s not found:%v", req.GetUUID(), err)
 		}

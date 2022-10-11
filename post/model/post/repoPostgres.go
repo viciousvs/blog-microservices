@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/viciousvs/blog-microservices/post/config"
 	"github.com/viciousvs/blog-microservices/post/storage/postgresRepo"
+	"github.com/viciousvs/blog-microservices/post/utils"
 	"log"
 	"time"
 )
@@ -28,9 +29,12 @@ func (r *repoPostgres) Create(ctx context.Context, post Post) (string, error) {
 	post.UUID = r.getNewUUID()
 	now := time.Now().Unix()
 	post.CreatedAt, post.UpdatedAt = now, now
-
-	ct, err := r.pgSource.Exec(ctx, `insert into post (id, title, content, created_at, deleted_at) values($1, $2, $3, $4, $5)`,
-		post.Title, post.Content, post.CreatedAt, post.UpdatedAt)
+	log.Println(post)
+	sqlStatement := `
+INSERT INTO post (id, title, content, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5)`
+	ct, err := r.pgSource.Exec(ctx, sqlStatement,
+		post.UUID, post.Title, post.Content, post.CreatedAt, post.UpdatedAt)
 	if err != nil {
 		return "", fmt.Errorf("cannot run Exec insert into, err:%v", err)
 	}
@@ -42,17 +46,16 @@ func (r *repoPostgres) Create(ctx context.Context, post Post) (string, error) {
 
 func (r *repoPostgres) GetAll(ctx context.Context) ([]*Post, error) {
 	posts := make([]*Post, 0)
-	rows, err := r.pgSource.Query(ctx, `select * from post`)
+	sqlStatement := `SELECT * FROM post`
+	rows, err := r.pgSource.Query(ctx, sqlStatement)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return posts, fmt.Errorf("No rows, err: %v", err)
+			return posts, utils.ErrNotFound
 		}
 		return posts, fmt.Errorf("cannot run Query select *, err:%v", err)
 	}
 	defer func() {
-		if err := rows.Close; err != nil {
-			log.Printf("close row error: %v", err)
-		}
+		rows.Close()
 	}()
 
 	for rows.Next() {
@@ -80,6 +83,8 @@ func (r *repoPostgres) GetById(ctx context.Context, uuid string) (Post, error) {
 }
 
 func (r *repoPostgres) Update(ctx context.Context, post Post) (string, error) {
+	var err error
+	var rowsAffectedInTr int64
 	if post.Title == "" && post.Content == "" {
 		return "", errors.New("nothing to update")
 	}
@@ -89,20 +94,22 @@ func (r *repoPostgres) Update(ctx context.Context, post Post) (string, error) {
 	}
 	defer func() {
 		if err != nil {
-			// rollback
+			tr.Rollback(ctx)
 		}
 	}()
-	if post.Title == "" {
-		_, err := tr.Exec(ctx, `update post set title=$1 where id=$2`, post.Title, post.UUID)
+	if post.Title != "" {
+		ct, err := tr.Exec(ctx, `update post set title=$1 where id=$2`, post.Title, post.UUID)
 		if err != nil {
 			return "", err
 		}
+		rowsAffectedInTr += ct.RowsAffected()
 	}
-	if post.Content == "" {
-		_, err := tr.Exec(ctx, `update post set content=$1 where id=$2`, post.Content, post.UUID)
+	if post.Content != "" {
+		ct, err := tr.Exec(ctx, `update post set content=$1 where id=$2`, post.Content, post.UUID)
 		if err != nil {
 			return "", err
 		}
+		rowsAffectedInTr += ct.RowsAffected()
 	}
 
 	now := time.Now().Unix()
@@ -110,7 +117,10 @@ func (r *repoPostgres) Update(ctx context.Context, post Post) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	if rowsAffectedInTr == 0 {
+		err = utils.ErrNotFound
+		return "", err
+	}
 	err = tr.Commit(ctx)
 	if err != nil {
 		return "", fmt.Errorf("Cannot commit update transaction, err: %v", err)

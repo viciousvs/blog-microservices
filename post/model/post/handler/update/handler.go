@@ -9,15 +9,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type handler struct {
+type Handler struct {
 	repo post.Repository
 }
 
-func NewHandler(repo post.Repository) *handler {
-	return &handler{repo: repo}
+func NewHandler(repo post.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
-func (h handler) Handle(ctx context.Context, req *pbPost.UpdateRequest) (string, error) {
+func (h Handler) Handle(ctx context.Context, req *pbPost.UpdateRequest) (string, error) {
 	if !utils.IsValidUUID(req.UUID) {
 		return "", status.Errorf(codes.InvalidArgument, "Invalid UUID")
 	}
@@ -30,7 +30,10 @@ func (h handler) Handle(ctx context.Context, req *pbPost.UpdateRequest) (string,
 	}
 	uuid, err := h.repo.Update(ctx, p)
 	if err != nil {
-		return "", status.Errorf(codes.AlreadyExists, "cannot create a post, err: %v", err)
+		if err == utils.ErrNotFound {
+			return "", err
+		}
+		return "", utils.ErrNotingUpdate
 	}
 	// process run, create user throw repo
 

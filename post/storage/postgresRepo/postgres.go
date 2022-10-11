@@ -30,7 +30,7 @@ func NewPostgresDB(config config.PostgresConfig) *PostgresDB {
 }
 
 func newPostgresRepository(config config.PostgresConfig) (*PostgresDB, error) {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
 		config.User,
 		config.Password,
 		config.Host,
@@ -42,18 +42,17 @@ func newPostgresRepository(config config.PostgresConfig) (*PostgresDB, error) {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	log.Println(dsn)
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = postgresDB.Ping(ctx)
+	err = pool.Ping(ctx)
+	log.Println(err)
 	if err != nil {
 		return nil, err
 	}
-
 	return &PostgresDB{pool}, nil
 }

@@ -6,22 +6,20 @@ import (
 	"github.com/viciousvs/blog-microservices/post/model/post"
 	"github.com/viciousvs/blog-microservices/post/utils"
 	pbPost "github.com/viciousvs/blog-microservices/proto/post"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-type handler struct {
+type Handler struct {
 	repo post.Repository
 }
 
-func NewHandler(repo post.Repository) *handler {
-	return &handler{repo: repo}
+func NewHandler(repo post.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
-func (h handler) Handle(ctx context.Context, request *pbPost.DeleteByIdRequest) (string, error) {
+func (h Handler) Handle(ctx context.Context, request *pbPost.DeleteByIdRequest) (string, error) {
 	uuid := request.GetUUID()
 	if !utils.IsValidUUID(uuid) {
-		return "", status.Errorf(codes.InvalidArgument, "Invalid UUID")
+		return "", utils.ErrInvalidUUID
 	}
 	uuid, err := h.repo.Delete(ctx, uuid)
 	if err != nil {

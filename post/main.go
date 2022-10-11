@@ -19,7 +19,7 @@ func main() {
 	// init env
 	cfg := config.NewConfig()
 	// init server
-	repo := post.NewRepoRedis(cfg.Redis)
+	repo := post.NewRepoPostgres(cfg.Postgres)
 
 	fmt.Println(cfg.Server.Addres)
 	s := postGRPC.NewServer(repo)

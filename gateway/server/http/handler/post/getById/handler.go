@@ -17,14 +17,19 @@ func NewHandler(ps pbPost.PostServiceClient) *handler {
 }
 
 func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(utils.ContentType, utils.ApplJson)
 	uuid := r.URL.Query().Get("id")
 	if uuid == "" {
-		utils.ErrorHandler(w, "empty uuid", http.StatusBadRequest)
+		utils.ErrorHandler(w, utils.ErrEmptyUUID, http.StatusBadRequest)
+		return
+	}
+	if !utils.IsValidUUID(uuid) {
+		utils.ErrorHandler(w, utils.ErrInvalidUUID, http.StatusBadRequest)
 		return
 	}
 	p, err := h.PostService.GetByID(r.Context(), &pbPost.GetByIdRequest{UUID: uuid})
 	if err != nil {
-		utils.ErrorHandler(w, err.Error(), http.StatusUnprocessableEntity)
+		utils.ErrorHandler(w, utils.ErrNotFound, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -36,9 +41,8 @@ func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: p.GetCreatedAt(),
 	}
 	err = json.NewEncoder(w).Encode(&res)
-	w.Header().Set(utils.ContentType, utils.ApplJson)
 	if err != nil {
-		utils.ErrorHandler(w, err.Error(), http.StatusUnprocessableEntity)
+		utils.ErrorHandler(w, err, http.StatusUnprocessableEntity)
 		return
 	}
 }

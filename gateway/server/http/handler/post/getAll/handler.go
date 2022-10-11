@@ -16,9 +16,10 @@ func NewHandler(ps pbPost.PostServiceClient) *handler {
 	return &handler{ps}
 }
 func (h *handler) GetAll(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(utils.ContentType, utils.ApplJson)
 	posts, err := h.PostService.GetAll(r.Context(), &pbPost.GetAllRequest{})
 	if err != nil {
-		utils.ErrorHandler(w, err.Error(), http.StatusUnprocessableEntity)
+		utils.ErrorHandler(w, utils.ErrNotFound, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -34,9 +35,8 @@ func (h *handler) GetAll(w http.ResponseWriter, r *http.Request) {
 		resPosts = append(resPosts, rp)
 	}
 	err = json.NewEncoder(w).Encode(&resPosts)
-	w.Header().Set(utils.ContentType, utils.ApplJson)
 	if err != nil {
-		utils.ErrorHandler(w, err.Error(), http.StatusUnprocessableEntity)
+		utils.ErrorHandler(w, err, http.StatusUnprocessableEntity)
 		return
 	}
 }

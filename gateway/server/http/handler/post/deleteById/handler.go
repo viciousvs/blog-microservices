@@ -15,22 +15,26 @@ func NewHandler(ps pbPost.PostServiceClient) *handler {
 	return &handler{ps}
 }
 func (h *handler) DeleteById(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(utils.ContentType, utils.ApplJson)
 	uuid := r.URL.Query().Get("id")
 	if uuid == "" {
-		utils.ErrorHandler(w, "empty uuid", http.StatusBadRequest)
+		utils.ErrorHandler(w, utils.ErrEmptyUUID, http.StatusBadRequest)
+		return
+	}
+	if !utils.IsValidUUID(uuid) {
+		utils.ErrorHandler(w, utils.ErrInvalidUUID, http.StatusBadRequest)
 		return
 	}
 	dr, err := h.PostService.DeleteByID(r.Context(), &pbPost.DeleteByIdRequest{UUID: uuid})
 	if err != nil {
-		utils.ErrorHandler(w, err.Error(), http.StatusUnprocessableEntity)
+		utils.ErrorHandler(w, utils.ErrNotFound, http.StatusUnprocessableEntity)
 		return
 	}
 
 	resp := make(map[string]string)
 	resp["uuid"] = dr.GetUUID()
-	w.Header().Set(utils.ContentType, utils.ApplJson)
 	if err := json.NewEncoder(w).Encode(&resp); err != nil {
-		utils.ErrorHandler(w, err.Error(), http.StatusUnprocessableEntity)
+		utils.ErrorHandler(w, err, http.StatusUnprocessableEntity)
 		return
 	}
 }
