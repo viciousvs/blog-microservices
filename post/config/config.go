@@ -46,7 +46,7 @@ func getEnvAsInt(name string, defaultValue int) int {
 func NewConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
-			Addres: getEnv("SERVER_ADDR", "localhost:50051"),
+			Addres: getEnv("SERVER_ADDR", "localhost:50055"),
 		},
 		Redis: RedisConfig{
 			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),

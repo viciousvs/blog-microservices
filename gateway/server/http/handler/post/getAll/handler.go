@@ -19,7 +19,7 @@ func (h *handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(utils.ContentType, utils.ApplJson)
 	posts, err := h.PostService.GetAll(r.Context(), &pbPost.GetAllRequest{})
 	if err != nil {
-		utils.ErrorHandler(w, utils.ErrNotFound, http.StatusUnprocessableEntity)
+		utils.NewErrorResponse(w, http.StatusUnprocessableEntity, utils.ErrNotFound.Error())
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.NewEncoder(w).Encode(&resPosts)
 	if err != nil {
-		utils.ErrorHandler(w, err, http.StatusUnprocessableEntity)
+		utils.NewErrorResponse(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 }

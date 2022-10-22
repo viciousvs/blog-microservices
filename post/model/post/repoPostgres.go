@@ -9,7 +9,6 @@ import (
 	"github.com/viciousvs/blog-microservices/post/config"
 	"github.com/viciousvs/blog-microservices/post/storage/postgresRepo"
 	"github.com/viciousvs/blog-microservices/post/utils"
-	"log"
 	"time"
 )
 
@@ -29,7 +28,6 @@ func (r *repoPostgres) Create(ctx context.Context, post Post) (string, error) {
 	post.UUID = r.getNewUUID()
 	now := time.Now().Unix()
 	post.CreatedAt, post.UpdatedAt = now, now
-	log.Println(post)
 	sqlStatement := `
 INSERT INTO post (id, title, content, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5)`

@@ -38,13 +38,13 @@ type ServerConfig struct {
 func NewConfig() *Config {
 	return &Config{
 		ServerConfig: ServerConfig{
-			Addr:           getEnv("HTTP_SERVER_ADDRESS", "localhost:8081"),
+			Addr:           getEnv("HTTP_SERVER_ADDRESS", "localhost:8080"),
 			MaxHeaderbytes: 1 << 20,
 			ReadTimeout:    10 * time.Second,
 			WriteTimeout:   10 * time.Second,
 		},
 		PostClientConfig: PostClientConfig{
-			Addr: getEnv("GRPC_CLIENT_ADDRESS", "localhost:50051"),
+			Addr: getEnv("GRPC_CLIENT_ADDRESS", "localhost:50055"),
 		},
 	}
 
